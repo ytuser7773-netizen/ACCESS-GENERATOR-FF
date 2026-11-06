@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Access Generator</title>
+  <script src="https://tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 flex items-center justify-center min-h-screen p-4 text-white font-sans">
+
+  <div class="max-w-md w-full bg-[#11131e] border border-[#2d1b4e] rounded-2xl p-6 shadow-2xl">
+    
+    <h1 class="text-2xl font-bold tracking-wider text-center text-white mb-1">ACCESS GENERATOR</h1>
+    <p class="text-xs text-pink-500 font-bold text-center tracking-widest uppercase mb-6">Local & Private Edition</p>
+
+    <!-- How To Use Section -->
+    <div class="bg-[#171a26] border border-gray-800 rounded-xl p-4 mb-6">
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+        📖 How to use
+      </h3>
+      <ul class="space-y-3 text-xs text-gray-300">
+        <li class="flex items-start gap-2">
+          <span class="bg-[#24283b] text-pink-500 font-bold rounded w-5 h-5 flex items-center justify-center shrink-0">1</span>
+          <span>Login via your game/app authentication provider.</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="bg-[#24283b] text-pink-500 font-bold rounded w-5 h-5 flex items-center justify-center shrink-0">2</span>
+          <span>Copy the complete redirect URL (containing <code class="text-pink-400 font-mono">eat=</code>).</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="bg-[#24283b] text-pink-500 font-bold rounded w-5 h-5 flex items-center justify-center shrink-0">3</span>
+          <span>Paste it below to extract the token instantly inside your browser.</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Input Section -->
+    <div class="space-y-4">
+      <div class="relative">
+        <input 
+          id="urlInput" 
+          type="text" 
+          placeholder="Paste full URL or raw eat token" 
+          class="w-full bg-[#171a26] border border-purple-900/40 rounded-xl px-4 py-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-all font-mono"
+        />
+      </div>
+      <p class="text-[10px] text-gray-500 text-center -mt-2">Accepts full redirect URL string or raw tokens.</p>
+
+      <button 
+        onclick="extractToken()" 
+        class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-4 rounded-xl transition-all uppercase tracking-wider text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-900/20"
+      >
+        Extract Token →
+      </button>
+    </div>
+
+    <!-- Result Display Room -->
+    <div id="resultBox" class="mt-6 hidden bg-[#171a26] border border-emerald-900/30 p-4 rounded-xl">
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Extracted Token:</span>
+        <button onclick="copyToClipboard()" class="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-1 rounded hover:bg-emerald-900 transition-all">Copy</button>
+      </div>
+      <div id="tokenOutput" class="text-xs font-mono break-all bg-black/30 p-3 rounded border border-gray-900 select-all text-gray-200"></div>
+    </div>
+
+    <!-- Warning Error Box -->
+    <div id="errorBox" class="mt-6 hidden bg-red-950/30 border border-red-900/30 p-4 rounded-xl text-center">
+      <p id="errorOutput" class="text-xs text-red-400 font-medium"></p>
+    </div>
+
+  </div>
+
+  <script>
+    function extractToken() {
+      const input = document.getElementById('urlInput').value.trim();
+      const resultBox = document.getElementById('resultBox');
+      const errorBox = document.getElementById('errorBox');
+      const tokenOutput = document.getElementById('tokenOutput');
+      const errorOutput = document.getElementById('errorOutput');
+
+      resultBox.classList.add('hidden');
+      errorBox.classList.add('hidden');
+
+      if (!input) {
+        showError("Please paste a URL or token string first.");
+        return;
+      }
+
+      let token = "";
+
+      try {
+        if (input.startsWith('http://') || input.startsWith('https://')) {
+          const urlObj = new URL(input);
+          token = urlObj.searchParams.get('eat');
+          
+          if (!token && urlObj.hash) {
+            const hashParams = new URLSearchParams(urlObj.hash.substring(1));
+            token = hashParams.get('eat');
+          }
+        }
+      } catch (e) {}
+
+      if (!token) {
+        const regex = /(?:eat=|^)([A-Za-z0-9_\-\.]+)/;
+        const match = input.match(regex);
+        if (match) {
+          token = match[1];
+        }
+      }
+
+      if (token) {
+        tokenOutput.textContent = token;
+        resultBox.classList.remove('hidden');
+      } else {
+        showError("Could not find a valid 'eat' parameter token in the provided string.");
+      }
+    }
+
+    function showError(message) {
+      const errorBox = document.getElementById('errorBox');
+      const errorOutput = document.getElementById('errorOutput');
+      errorOutput.textContent = message;
+      errorBox.classList.remove('hidden');
+    }
+
+    function copyToClipboard() {
+      const tokenText = document.getElementById('tokenOutput').textContent;
+      navigator.clipboard.writeText(tokenText).then(() => {
+        alert("Token copied to clipboard!");
+      });
+    }
+  </script>
+</body>
+</html>
